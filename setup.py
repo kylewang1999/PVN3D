@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-import os
-import glob
+import os, glob
+from os.path import abspath, join, dirname
 from setuptools import setup
-from torch.utils.cpp_extension import BuildExtension, CUDAExtension
+from torch.utils.cpp_extension import BuildExtension, CUDAExtension, include_paths
 
 
-_ext_src_root = "./pvn3d/_ext-src"
+_ext_src_root = join(dirname(abspath(__file__)), "pvn3d/_ext-src")
 _ext_sources = glob.glob("{}/src/*.cpp".format(_ext_src_root)) + glob.glob(
     "{}/src/*.cu".format(_ext_src_root)
 )
 _ext_headers = glob.glob("{}/include/*".format(_ext_src_root))
+_torch_cpp_include_dirs = include_paths()
 
 
 setup(
@@ -18,11 +19,10 @@ setup(
         CUDAExtension(
             name='pointnet2_utils._ext',
             sources=_ext_sources,
+            include_dirs=_torch_cpp_include_dirs,
             extra_compile_args={
-                "cxx": ["-O2", "-I{}".format("{}/include".format(_ext_src_root))],
-                "nvcc": [
-                    "-O2", "-I{}".format("{}/include".format(_ext_src_root))
-                ],
+                "cxx": ["-O2", f"-I{_ext_src_root}/include", "-v"],
+                "nvcc": ["-O2", f"-I{_ext_src_root}/include", "-v"],
             },
         )
     ],
